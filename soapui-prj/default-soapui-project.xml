@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="fc5fc71b-32fc-4e64-9454-09348eb345ed" activeEnvironment="Default" name="ModCheck [AWS API]" resourceRoot="" soapui-version="5.6.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:RestService" id="931661f2-c862-43e3-a933-2e2374458469" wadlVersion="http://wadl.dev.java.net/2009/02" name="" type="rest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart=""/><con:endpoints><con:endpoint>http://localhost:8080</con:endpoint></con:endpoints><con:resource name="" path="/ws/rest/modcheck/isvalid" id="906f14c3-c4f9-4dd6-a8e7-84f48602ff43"><con:settings/><con:parameters/><con:method name="1" id="59fccd0e-692b-4817-aaa9-a7b702d30d6f" method="POST"><con:settings/><con:parameters/><con:representation type="REQUEST"><con:mediaType>application/json</con:mediaType><con:params/></con:representation><con:representation type="RESPONSE"><con:mediaType>text/html; charset=iso-8859-1</con:mediaType><con:status>200</con:status><con:params/><con:element>html</con:element></con:representation><con:representation type="FAULT"><con:mediaType>application/json</con:mediaType><con:status>400 500</con:status><con:params/><con:element xmlns:isv="http://localhost/ws/rest/modcheck/isvalid">isv:Fault</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json</con:mediaType><con:status>200</con:status><con:params/><con:element xmlns:isv="http://localhost/ws/rest/modcheck/isvalid">isv:Response</con:element></con:representation><con:request name="Request 1" id="5fec0246-7255-40a2-b53c-d1ac0a28bbbf" mediaType="application/json" postQueryString="false"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8080</con:endpoint><con:request>{
+  "AccountNumber": "500",
+  "SortCode": "500"
+}</con:request><con:originalUri>http://localhost/ws/rest/modcheck/isvalid</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:request></con:method></con:resource></con:interface><con:restMockService id="d0959c63-f56d-44f4-96b3-5a96d7fd76c8" port="8080" path="/" host="LAPTOP-OFHUO465" name="ModCheck [AWS API] MockService" docroot=""><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.panels.mock.WsdlMockServiceDesktopPanel$LogListModel@maxSize">100</con:setting></con:settings><con:properties/><con:restMockAction name="/ws/rest/modcheck/isvalid" method="POST" resourcePath=" http://stubs.scotgov-dt.local:8080/ws/rest/modcheck/isvalid" id="6d222565-f777-4469-98d3-b48f882aac92"><con:settings/><con:defaultResponse>200 - Bank account valid (MC1)</con:defaultResponse><con:dispatchStyle>SCRIPT</con:dispatchStyle><con:dispatchPath><![CDATA[import groovy.json.JsonSlurper;
+
+// parse json request
+def parsedJsonRequest = new groovy.json.JsonSlurper().parseText(mockRequest.getRequestContent())
+
+// set account number & sort code variables
+def accountNum = parsedJsonRequest["AccountNumber"]
+def sortCode = parsedJsonRequest["SortCode"]
+
+// check for a requested 500 error
+if (accountNum.equals("500") && sortCode.equals("500")) {
+	return "500 - Internal server error"
+}
+
+// validate account number 
+if (accountNum.isNumber() && accountNum.length()== 8 ) {
+	
+	// validate sort code
+	if (sortCode.isNumber() && sortCode.length()== 6) {
+
+		// cast fields as int
+		int an = accountNum as int
+		int sc = sortCode as int
+		
+		// check invalid account number/sort code
+		if (an >= 20000000 && sc >= 200000){
+
+			// check unsupported account number/sort code
+			if (an < 90000000 && sc < 900000){
+
+				return "200 - Bank account valid (MC1)"
+				
+			} else {
+				return "200 - Bank account unsupported (MC3)"
+			}
+
+		} else {
+			return "200 - Bank account invalid (MC2)"
+		}
+		
+	} else {
+
+		// create errorMessage
+		context.errMsg = "Invalid Sort Code: " + sortCode
+		return "400 - Data validation failiure"
+	}
+	
+} else {
+
+	// create errorMessage
+	context.errMsg = "Invalid Account Number: " + accountNum
+	return "400 - Data validation failiure"
+}]]></con:dispatchPath><con:response name="200 - Bank account valid (MC1)" id="d3adb989-86e3-4496-b88c-e69d2283b26e" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>{
+  "result": {
+    "modulusCheckResultCode": "MC1",
+    "modulusCheckResultDescription": "Bank account valid"
+  },
+  "statusCode": 200
+}</con:responseContent></con:response><con:response name="200 - Bank account invalid (MC2)" id="14990b41-d5c9-4990-af4a-52cfea954e25" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>{
+  "result": {
+    "modulusCheckResultCode": "MC2",
+    "modulusCheckResultDescription": "Bank account invalid"
+  },
+  "statusCode": 200
+}</con:responseContent></con:response><con:response name="200 - Bank account unsupported (MC3)" id="4382fb09-a3c5-4e3a-a9c9-86f3c53ae58e" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>{
+  "result": {
+    "modulusCheckResultCode": "MC3",
+    "modulusCheckResultDescription": "Bank account unsupported"
+  },
+  "statusCode": 200
+}</con:responseContent></con:response><con:response name="400 - Data validation failiure" id="18aecaff-93f6-48ec-afae-fa754e766c8f" httpResponseStatus="400" mediaType="application/json"><con:settings/><con:script/><con:responseContent>{
+  "result": {
+    "errorMessage": "${errMsg}",
+  },
+  "statusCode": 400
+}</con:responseContent></con:response><con:response name="500 - Internal server error" id="1606d634-1177-45ff-9ffd-381950363d43" httpResponseStatus="500" mediaType="application/json"><con:settings/><con:responseContent>{
+  "result": {
+    "errorMessage": "Internal Server Error",
+  },
+  "statusCode": 500
+}</con:responseContent></con:response></con:restMockAction></con:restMockService><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>
